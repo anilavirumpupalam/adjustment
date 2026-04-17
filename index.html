@@ -823,21 +823,34 @@
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
         
-        // IMPORTANT: Replace YOUR_DEPLOYMENT_ID with your actual Google Apps Script Deployment URL
-        // Find it in Google Apps Script: Deploy > Manage Deployments > Copy the full URL
-        const SCRIPT_URL = 'const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhbaW-frOercambmaguzXjqJ-b5DWSfWoGf2hgN2U0SmG80DXj-NixEDVu6fH4ZmFx/usercallback';
+        // ⚠️ IMPORTANT: Replace with your actual deployment URL
+        // Go to Google Apps Script → Deploy → Manage Deployments → Copy URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPGR3Eu2Mtsmc2nqziOb26la8w-Cd53LJN6-wezu7030et-2fxq_BcYtwGkQevlWDT/usercallback';
+
         // ==================== API CALL FUNCTION ====================
         async function callAPI(action, params = {}) {
             try {
+                console.log('API Call:', action, params);
+                
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({
                         action: action,
                         params: params
-                    })
+                    }),
+                    mode: 'cors'
                 });
 
                 const text = await response.text();
+                console.log('API Response:', text);
+                
+                if (!text) {
+                    throw new Error('Empty response from server');
+                }
+                
                 return JSON.parse(text);
             } catch (e) {
                 console.error('API Error:', e);
@@ -869,17 +882,15 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            try {
-                const result = await callAPI('login', { email, password });
-                
-                if (result.success) {
-                    currentUser = result.user;
-                    showLoginSuccess();
-                } else {
-                    showAlert(result.message, 'error', 'loginAlert');
-                }
-            } catch (e) {
-                showAlert('Error: ' + e.message, 'error', 'loginAlert');
+            console.log('Login attempt:', email);
+
+            const result = await callAPI('login', { email, password });
+            
+            if (result.success) {
+                currentUser = result.user;
+                showLoginSuccess();
+            } else {
+                showAlert(result.message, 'error', 'loginAlert');
             }
         }
 
