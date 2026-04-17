@@ -823,39 +823,14 @@
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
         
-        // ⚠️ IMPORTANT: Replace with your actual deployment URL
-        // Go to Google Apps Script → Deploy → Manage Deployments → Copy URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5Sixk_UyAe4kdT5HHFBgH5diRsFGuXT6DXuUxECEIjo_k7BHoQK3LiuQBpLr_EBpz/usercallback';
-
-        // ==================== API CALL FUNCTION ====================
+        // ==================== API CALL FUNCTION - Using google.script.run ====================
         async function callAPI(action, params = {}) {
-            try {
-                console.log('API Call:', action, params);
-                
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        params: params
-                    }),
-                    mode: 'cors'
-                });
-
-                const text = await response.text();
-                console.log('API Response:', text);
-                
-                if (!text) {
-                    throw new Error('Empty response from server');
-                }
-                
-                return JSON.parse(text);
-            } catch (e) {
-                console.error('API Error:', e);
-                return { success: false, message: 'Network error: ' + e.message };
-            }
+            return new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    .executeServerFunction(action, params);
+            });
         }
 
         // ==================== UTILITIES ====================
@@ -882,15 +857,17 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            console.log('Login attempt:', email);
-
-            const result = await callAPI('login', { email, password });
-            
-            if (result.success) {
-                currentUser = result.user;
-                showLoginSuccess();
-            } else {
-                showAlert(result.message, 'error', 'loginAlert');
+            try {
+                const result = await callAPI('login', { email, password });
+                
+                if (result.success) {
+                    currentUser = result.user;
+                    showLoginSuccess();
+                } else {
+                    showAlert(result.message, 'error', 'loginAlert');
+                }
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error', 'loginAlert');
             }
         }
 
