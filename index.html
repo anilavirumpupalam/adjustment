@@ -2,9 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advance & Receipt Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advance & Receipt Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -826,14 +823,27 @@
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
         
-        // ==================== API CALL FUNCTION - Using google.script.run ====================
+        // ✅ PASTE YOUR GOOGLE APPS SCRIPT DEPLOYMENT URL HERE (with /exec)
+        // Change "YOUR_DEPLOYMENT_ID" to your actual deployment ID
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyY3CQ2Qsrn19SyhGl-20vsPmCYDkD1RcC8tYAAN_voYhsu4hxRXcXknS8cl6lY8XEB/exec';
+        
+        // ==================== API CALL FUNCTION ====================
         async function callAPI(action, params = {}) {
-            return new Promise((resolve, reject) => {
-                google.script.run
-                    .withSuccessHandler(resolve)
-                    .withFailureHandler(reject)
-                    .executeServerFunction(action, params);
-            });
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: action,
+                        params: params
+                    })
+                });
+
+                const text = await response.text();
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('API Error:', e);
+                return { success: false, message: 'Network error: ' + e.message };
+            }
         }
 
         // ==================== UTILITIES ====================
