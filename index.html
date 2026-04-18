@@ -823,9 +823,8 @@
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
         
-        // ✅ PASTE YOUR GOOGLE APPS SCRIPT DEPLOYMENT URL HERE (with /exec)
-        // Change "YOUR_DEPLOYMENT_ID" to your actual deployment ID
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvjr5EvLiyjrZOsEL4Bc9g6NgIjnbhugOtqqwSUSi_bAbnTBY0LC2Ibd3KOC5Vc0ov/exec';
+        // ✅ YOUR GOOGLE APPS SCRIPT DEPLOYMENT URL
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxd3hSRGIao9M9ioQxpuN8kAquuHwdnrFifJtrjqRlE6qniIdH9fyMPr2FOWeZz8Jz0/exec';
         
         // ==================== API CALL FUNCTION ====================
         async function callAPI(action, params = {}) {
@@ -979,72 +978,32 @@
             `).join('');
         }
 
-       async function handleAddEmployee(event) {
-    console.log('=== handleAddEmployee START ===');
-    event.preventDefault();
-    console.log('Event prevented');
+        async function handleAddEmployee(event) {
+            event.preventDefault();
 
-    try {
-        const empNo = document.getElementById('empNo').value;
-        const firstName = document.getElementById('firstName').value;
-        const lastName = document.getElementById('lastName').value;
-        const empEmail = document.getElementById('empEmail').value;
-        const empPhone = document.getElementById('empPhone').value;
-        const empDept = document.getElementById('empDept').value;
-        const designation = document.getElementById('designation').value;
-        const office = document.getElementById('office').value;
+            const employeeData = {
+                employeeNo: document.getElementById('empNo').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('empEmail').value,
+                phone: document.getElementById('empPhone').value,
+                department: document.getElementById('empDept').value,
+                designation: document.getElementById('designation').value,
+                office: document.getElementById('office').value,
+                userId: currentUser.userId
+            };
 
-        console.log('Form values captured:');
-        console.log('empNo:', empNo);
-        console.log('firstName:', firstName);
-        console.log('lastName:', lastName);
-        console.log('empEmail:', empEmail);
-        console.log('empPhone:', empPhone);
-        console.log('empDept:', empDept);
-        console.log('designation:', designation);
-        console.log('office:', office);
-
-        const employeeData = {
-            employeeNo: empNo,
-            firstName: firstName,
-            lastName: lastName,
-            email: empEmail,
-            phone: empPhone,
-            department: empDept,
-            designation: designation,
-            office: office
-        };
-
-        console.log('Employee data object:', JSON.stringify(employeeData));
-
-        console.log('Calling API with recordEmployee...');
-        const result = await callAPI('recordEmployee', employeeData);
-        
-        console.log('API result:', JSON.stringify(result));
-        
-        if (result.success) {
-            console.log('SUCCESS! Showing alert');
-            showAlert(result.message, 'success');
-            event.target.reset();
-            console.log('Form reset');
-            loadEmployeesList();
-            console.log('Employee list reloaded');
-            loadEmployeesDropdown();
-            console.log('Employees dropdown reloaded');
-        } else {
-            console.log('FAILURE! Result:', result.message);
-            showAlert(result.message, 'error');
+            const result = await callAPI('recordEmployee', employeeData);
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                event.target.reset();
+                loadEmployeesList();
+                loadEmployeesDropdown();
+            } else {
+                showAlert(result.message, 'error');
+            }
         }
-        
-        console.log('=== handleAddEmployee END ===');
-    } catch (e) {
-        console.error('=== handleAddEmployee ERROR ===');
-        console.error('Error:', e.message);
-        console.error('Stack:', e.stack);
-        console.error('=== ERROR END ===');
-        showAlert('Error: ' + e.message, 'error');
-    }
-}
 
         async function deleteEmployee(empId) {
             if (confirm('Are you sure you want to delete this employee?')) {
@@ -1084,61 +1043,35 @@
             `).join('');
         }
 
-async function handleAddAdvance(event) {
-    console.log('=== handleAddAdvance START ===');
-    event.preventDefault();
+        async function handleAddAdvance(event) {
+            event.preventDefault();
 
-    try {
-        const advEmpId = document.getElementById('advEmpId').value;
-        const advAmount = document.getElementById('advAmount').value;
-        const advDate = document.getElementById('advDate').value;
-        const advPurpose = document.getElementById('advPurpose').value;
-        const advNotes = document.getElementById('advNotes').value;
+            const advanceData = {
+                employeeId: document.getElementById('advEmpId').value,
+                amount: document.getElementById('advAmount').value,
+                advanceDate: document.getElementById('advDate').value,
+                purpose: document.getElementById('advPurpose').value,
+                notes: document.getElementById('advNotes').value,
+                userId: currentUser.userId
+            };
 
-        console.log('Form values:');
-        console.log('advEmpId:', advEmpId);
-        console.log('advAmount:', advAmount);
-        console.log('advDate:', advDate);
-        console.log('advPurpose:', advPurpose);
-        console.log('advNotes:', advNotes);
+            if (!advanceData.employeeId) {
+                showAlert('Please select an employee', 'error');
+                return;
+            }
 
-        if (!advEmpId) {
-            console.log('ERROR: No employee selected');
-            showAlert('Please select an employee', 'error');
-            return;
+            const result = await callAPI('recordAdvance', advanceData);
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                event.target.reset();
+                document.getElementById('advDate').valueAsDate = new Date();
+                loadAdvancesList();
+                loadDashboardData();
+            } else {
+                showAlert(result.message, 'error');
+            }
         }
-
-        const advanceData = {
-            employeeId: advEmpId,
-            amount: advAmount,
-            advanceDate: advDate,
-            purpose: advPurpose,
-            notes: advNotes
-        };
-
-        console.log('Calling API with recordAdvance...');
-        const result = await callAPI('recordAdvance', advanceData);
-        
-        console.log('API result:', JSON.stringify(result));
-        
-        if (result.success) {
-            console.log('SUCCESS!');
-            showAlert(result.message, 'success');
-            event.target.reset();
-            document.getElementById('advDate').valueAsDate = new Date();
-            loadAdvancesList();
-            loadDashboardData();
-        } else {
-            console.log('FAILURE:', result.message);
-            showAlert(result.message, 'error');
-        }
-        
-        console.log('=== handleAddAdvance END ===');
-    } catch (e) {
-        console.error('handleAddAdvance ERROR:', e.message);
-        showAlert('Error: ' + e.message, 'error');
-    }
-}
 
         async function deleteAdvance(advId) {
             if (confirm('Are you sure you want to delete this advance?')) {
@@ -1177,65 +1110,37 @@ async function handleAddAdvance(event) {
             `).join('');
         }
 
-     async function handleAddReceipt(event) {
-    console.log('=== handleAddReceipt START ===');
-    event.preventDefault();
+        async function handleAddReceipt(event) {
+            event.preventDefault();
 
-    try {
-        const recEmpId = document.getElementById('recEmpId').value;
-        const recAmount = document.getElementById('recAmount').value;
-        const recDate = document.getElementById('recDate').value;
-        const paymentMethod = document.getElementById('paymentMethod').value;
-        const refNo = document.getElementById('refNo').value;
-        const recRemarks = document.getElementById('recRemarks').value;
+            const receiptData = {
+                employeeId: document.getElementById('recEmpId').value,
+                amount: document.getElementById('recAmount').value,
+                receiptDate: document.getElementById('recDate').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                referenceNo: document.getElementById('refNo').value,
+                remarks: document.getElementById('recRemarks').value,
+                userId: currentUser.userId
+            };
 
-        console.log('Form values:');
-        console.log('recEmpId:', recEmpId);
-        console.log('recAmount:', recAmount);
-        console.log('recDate:', recDate);
-        console.log('paymentMethod:', paymentMethod);
-        console.log('refNo:', refNo);
-        console.log('recRemarks:', recRemarks);
+            if (!receiptData.employeeId) {
+                showAlert('Please select an employee', 'error');
+                return;
+            }
 
-        if (!recEmpId) {
-            console.log('ERROR: No employee selected');
-            showAlert('Please select an employee', 'error');
-            return;
+            const result = await callAPI('recordReceipt', receiptData);
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                event.target.reset();
+                document.getElementById('recDate').valueAsDate = new Date();
+                loadReceiptsList();
+                loadAdvancesList();
+                loadDashboardData();
+            } else {
+                showAlert(result.message, 'error');
+            }
         }
-
-        const receiptData = {
-            employeeId: recEmpId,
-            amount: recAmount,
-            receiptDate: recDate,
-            paymentMethod: paymentMethod,
-            referenceNo: refNo,
-            remarks: recRemarks
-        };
-
-        console.log('Calling API with recordReceipt...');
-        const result = await callAPI('recordReceipt', receiptData);
-        
-        console.log('API result:', JSON.stringify(result));
-        
-        if (result.success) {
-            console.log('SUCCESS!');
-            showAlert(result.message, 'success');
-            event.target.reset();
-            document.getElementById('recDate').valueAsDate = new Date();
-            loadReceiptsList();
-            loadAdvancesList();
-            loadDashboardData();
-        } else {
-            console.log('FAILURE:', result.message);
-            showAlert(result.message, 'error');
-        }
-        
-        console.log('=== handleAddReceipt END ===');
-    } catch (e) {
-        console.error('handleAddReceipt ERROR:', e.message);
-        showAlert('Error: ' + e.message, 'error');
-    }
-}
 
         async function verifyReceipt(recId) {
             const result = await callAPI('verifyReceipt', { receiptId: recId });
